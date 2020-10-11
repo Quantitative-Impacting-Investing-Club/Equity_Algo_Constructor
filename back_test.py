@@ -1,0 +1,1 @@
+# Responsbile for taking information from stats in as well as user parameters to determine cash made
