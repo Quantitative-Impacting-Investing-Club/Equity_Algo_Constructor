@@ -15,7 +15,6 @@ def movavg_crossover(short_period,long_period,funds,curr_value):
     print(long_period+" Average" + str(long_avg))
     print(short_period+" Average" + str(short_avg))
     print("Potential Returns: " + str(potential_gains))
-    print("Z-Score probability of happening: " + str(z_scores[0]))
     if(buy_flag):
         print("BUY")
     else:
