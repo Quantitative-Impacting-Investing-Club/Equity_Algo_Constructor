@@ -1,33 +1,40 @@
 import yfinance as yf
 import matplotlib.pyplot as plt
 
+
 def get_stock(ticker):
-    #get ticker object
+    # get ticker object
     ticker = yf.Ticker(ticker)
-    #information about ticker
+    # information about ticker
     print(ticker.info)
     print(ticker.actions)
-    #get time series data
+    # get time series data
     df = ticker.history()
     print(df)
     print(df.describe())
     print(df.columns)
     print(df.index)
-    #indexing columns
+    # indexing columns
     print(df['Open'])
-    print(df[['Open','Close']])
+    print(df[['Open', 'Close']])
 
     print(df['Open'][0])
-    print(df[['Open','Close']].iloc[0])
-    print(df[['Open','Close']].loc['2020-09-10'])
-    #indexing rows this data
+    print(df[['Open', 'Close']].iloc[0])
+    print(df[['Open', 'Close']].loc['2020-09-10'])
+    # indexing rows this data
     print(df.loc['2020-09-10'])
     print(df.iloc[0])
 
     print(df.loc['2020-09-10':'2020-09-20'])
     print(df.iloc[0:5])
 
-    return(df[['Open','Close']])
+    return(df[['Open', 'Close']])
+
+
+def load_every_fifteen(ticker, startDate, endDate):
+    ticker = yf.Ticker(ticker)
+    history = ticker.history(start=startDate, end=endDate)
+    return history
 
 
 def plot_findat(df):
@@ -35,7 +42,8 @@ def plot_findat(df):
     plt.xlabel('Date')
     plt.ylabel('Price')
     plt.show()
-    
+
+
 if __name__ == "__main__":
     df = get_stock("AAPL")
     plot_findat(df)
