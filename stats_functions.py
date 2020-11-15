@@ -41,13 +41,33 @@ def calculate_mfi(ticker_name, date):
     
     return mfi   
  
+# plots MFI of a stock over given interval
+def plot_mfi(ticker_name, interval, current_date):   
+    
+    # generates list of dates in desired interval
+    date_list = [current_date - datetime.timedelta(days=x) for x in range(interval)]
+    date_list.reverse()
+    
+    mfi = [0] * interval
+    
+    # calculate MFI for each day in desired interval
+    for i in range(interval):
+        mfi[i] = calculate_mfi(ticker_name, date_list[i])
+        
+    # makes more readable x-axis values for plot
+    dates =[x.strftime("%m-%d-%Y") for x in date_list]
+    
+    # plot the results
+    plt.plot(dates, mfi)
+    plt.xlabel('Date')
+    plt.ylabel('Money Flow Index')
+    plt.title(str("Money Flow Index of " + ticker_name + " over " + str(interval) + " days"))
+    plt.show()
 
 
-    
-    
 if __name__ == "__main__":
     date = datetime.datetime.today()
-    print(calculate_mfi("AAPL", date))
+    print("MFI: " + str(calculate_mfi("AAPL", date)))
     
-
+    plot_mfi("AAPL", 30, date)
     
