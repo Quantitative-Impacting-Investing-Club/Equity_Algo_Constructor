@@ -137,3 +137,36 @@ if __name__ == "__main__":
     
     plot_mfi("AAPL", 30, date)
     
+def candlestick_strategy(ticker_name, interval):
+    #candle stick can do long intervals since yfinance provides open, close,highs and lows for a long range of dates
+    date_list = [datetime.date(datetime.now()) - datetime.timedelta(days=x) for x in range(interval)]
+    date_list.reverse()
+    #from start of interval to end of interval
+    actionFlag = False
+    sellFlag = False
+    buyFlag = False
+    transactions = {}
+    for tickers in ticker_name:
+        ticker = yf.Ticker(ticker_name)
+        delta = datetime.timedelta(days=25)
+        df = ticker.history(start=date-delta, end=date) 
+        for date in date_list: 
+            #if():
+                #hammer
+            #else if():
+                #
+            #recognize the trends
+
+
+            if(actionFlag == True):
+                if(sellFlag == True):
+                    #sell and add to transactions
+                    transactions.update({'stock':ticker_name,'date':date,'action':"sell"})
+                    #data.update({'c':3,'d':4})  # Updates 'c' and adds 'd'
+                elif(buyFlag == True):
+                    #buy and add to transactions
+                    transactions.update({'stock':ticker_name,'date':date,'action':"buy"})
+
+    
+    return transactions
+    #expecting returned info like [buy/sell amount, num_shares,date, stock]
