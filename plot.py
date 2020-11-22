@@ -3,6 +3,8 @@
 import yfinance as yf
 import matplotlib.pyplot as plt
 import pandas as pd
+import plotly.graph_objects as go
+from datetime import datetime
 
 # plots price at open / close over past week
 def plot_open_close(ticker_name, time_period):
@@ -47,6 +49,23 @@ def plot_stocks(stocks, time_period):
     
     plt.show()
 
+def plot_candle(stocks,time_period):
+    
+    ticker = yf.Ticker(stocks)
+    df = ticker.history(period = time_period)
+    high_data = df[['High']]
+    open_data = df['Open']
+    low_data = df['Low']
+    close_data = df['Close']
+    #dates = df['Dates']
+    date_list = [datetime.date(datetime.now()) - datetime.timedelta(days=x) for x in range(interval)]
+    date_list.reverse()
+
+    fig = go.Figure(data=[go.Candlestick(x=dates,
+                        open=open_data, high=high_data,
+                        low=low_data, close=close_data)])
+
+    fig.show()
     
 if __name__ == "__main__":
     plot_open_close("AAPL", "5d")
@@ -55,3 +74,4 @@ if __name__ == "__main__":
 
     stocks = ["AAPL", "GOOGL", "AMZN", "TSLA"]
     plot_stocks(stocks, "1mo")
+    #plot_candle("AAPL","1mo") having issues extracting the dates
