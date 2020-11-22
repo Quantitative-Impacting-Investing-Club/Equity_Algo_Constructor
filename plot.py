@@ -68,7 +68,7 @@ def plot_candle(stocks,start_date):
     'high': df.High,
     'low': df.Low,
     'type': 'candlestick',
-    'name': 'MSFT',
+    'name': 'AAPL',
     'showlegend': True
 }
 
