@@ -126,47 +126,119 @@ def plot_rsi(ticker_name, interval, current_date):
     plt.show()
 
 
-if __name__ == "__main__":
-    date = datetime.datetime.today()
-
-    print("RSI: " + str(calculate_rsi("AAPL", date)))
-    
-    plot_rsi("AAPL", 30, date)
-
-    print("MFI: " + str(calculate_mfi("AAPL", date)))
-    
-    plot_mfi("AAPL", 30, date)
-    
-def candlestick_strategy(ticker_name, interval):
+def candlestick_strategy(ticker_name, interval,current_date):
     #candle stick can do long intervals since yfinance provides open, close,highs and lows for a long range of dates
-    date_list = [datetime.date(datetime.now()) - datetime.timedelta(days=x) for x in range(interval)]
+    date_list = [current_date - datetime.timedelta(days=x) for x in range(interval)]
     date_list.reverse()
     #from start of interval to end of interval
     actionFlag = False
     sellFlag = False
     buyFlag = False
-    transactions = {}
+    transactions = pd.DataFrame(columns=['stock','date','action'])
     for tickers in ticker_name:
         ticker = yf.Ticker(ticker_name)
-        delta = datetime.timedelta(days=25)
-        df = ticker.history(start=date-delta, end=date) 
-        for date in date_list: 
-            #if():
-                #hammer
-            #else if():
-                #
-            #recognize the trends
+        delta = datetime.timedelta(days=interval)
+        df = ticker.history(start=current_date-delta, end=current_date) 
+        dates = df.index
+        df.insert(0, "Date", df.index, True)
+        df.insert(0, "Index", list(range(len(df.index))), True)
+        df.set_index("Index", inplace=True)
+        #print(df)
+        runningStats = pd.DataFrame(columns=['gainCheck','change','ratio','swing','peakSwingRatio','date'])
+        for i in range(len(df.index)):
+            normalizedDate = date.strftime("%Y-%m-%d")
+            currentOpen = df.loc[i,'Open']
+            currentClose = df.loc[i,'Close']
+            currentLow = df.loc[i,'Low']
+            currentHigh = df.loc[i,'High']
+            #print(currentOpen)
+            #print(currentClose)
+            #print(currentLow)
+            #print(currentHigh)
+            runningStatsFrame = pd.DataFrame({'gainCheck': (currentOpen > currentClose), 'change':currentOpen-currentClose,
+            'ratio':abs((currentOpen-currentClose)/currentOpen),'swing':currentHigh-currentLow,
+            'peakSwingRatio': abs((currentOpen-currentClose)/(currentHigh-currentLow)),'date':dates[i]},index = [i])
+            runningStats = runningStats.append(runningStatsFrame)
+            if(i > 2): #3 day candlestick patterns
+                
+                #the numbers here are kinda arbitrary ngl, thats why theyre all precomputed, so we can change them
+                negativeTrend = df.loc[i-2,'Close'] > currentClose
+                positiveTrend = df.loc[i-2,'Close'] < currentClose
+
+                hammerThickness = 0.25
+                hammerCheckTop = currentHigh/currentOpen*(0.2) < runningStats['swing'][i]
+                hammerCheckMid = runningStats['peakSwingRatio'][i] < hammerThickness
+
+                TBCThreshold = 0.7
+                ThreeBlackCrowsCheck = ((runningStats['peakSwingRatio'][i] > TBCThreshold) and (runningStats['peakSwingRatio'][i-1] > TBCThreshold)
+                and (runningStats['peakSwingRatio'][i-2]) > TBCThreshold)
+
+                TLSThreshold = 0.4
+                ThreeLineStrikeCheck = ((runningStats['peakSwingRatio'][i] > TLSThreshold) and (runningStats['peakSwingRatio'][i-1] > TLSThreshold)
+                and (runningStats['peakSwingRatio'][i-2]) > TLSThreshold)
 
 
-            if(actionFlag == True):
-                if(sellFlag == True):
-                    #sell and add to transactions
-                    transactions.update({'stock':ticker_name,'date':date,'action':"sell"})
-                    #data.update({'c':3,'d':4})  # Updates 'c' and adds 'd'
-                elif(buyFlag == True):
-                    #buy and add to transactions
-                    transactions.update({'stock':ticker_name,'date':date,'action':"buy"})
+                gapCheck = ((currentOpen-df.loc[i-1,'Close'])/df.loc[i-1,'Close']) > 0.04 #if the stock loses 4% or more overnight
+                if(negativeTrend and runningStats['gainCheck'][i] and hammerCheckTop and hammerCheckMid):
+                    buyFlag = True
+                    actionFlag = True
+                    print("Hammer")
+                    #hammer
+                elif(negativeTrend and ThreeBlackCrowsCheck):
+                    buyFlag = True
+                    actionFlag = True
+                    print("Three black Crows")
+                    #three black crows
+                elif(positiveTrend and ThreeLineStrikeCheck):
+                    sellFlag = True
+                    actionFlag = True
+                    print("Three line Strike (bear)")
+                    #Three Line strike (bear)
+                elif(negativeTrend and ThreeLineStrikeCheck):
+                    buyFlag = True
+                    actionFlag = True
+                    print("Three line Strike (bull)")
+                    #Three Line strike (bull)
+                elif(gapCheck):
+                    sellFlag = True
+                    actionFlag = True
+                    print("Gap")
+                    #gap
+                #recognize the trends
+                if(actionFlag):
+                    actionFlag = False
+                    if(sellFlag == True):
+                        sellFlag = False
+                        #sell and add to transactions
+                        transFrame = pd.DataFrame({'stock':ticker_name,'date':dates[i],'action':"sell"},[len(transactions)])
+                        print("Trans")
+                        print(transFrame)
+                        transactions = transactions.append(transFrame)
+                        #data.update({'c':3,'d':4})  # Updates 'c' and adds 'd'
+                    elif(buyFlag == True):
+                        buyFlag = False
+                        #buy and add to transactions
+                        transFrame = pd.DataFrame({'stock':ticker_name,'date':dates[i],'action':"buy"}, index = [len(transactions)])
+                        print("Trans")
+                        print(transFrame)
+                        transactions = transactions.append(transFrame)
 
-    
+    #print(runningStats)
+    #print(df)
+    print(transactions)
     return transactions
     #expecting returned info like [buy/sell amount, num_shares,date, stock]
+
+
+if __name__ == "__main__":
+    date = datetime.datetime.today()
+
+    #print("RSI: " + str(calculate_rsi("AAPL", date)))
+    
+    #plot_rsi("AAPL", 30, date)
+
+    #print("MFI: " + str(calculate_mfi("AAPL", date)))
+    
+    #plot_mfi("AAPL", 30, date)
+    
+    candlestick_strategy('AAPL',25,date)
