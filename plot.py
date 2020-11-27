@@ -53,34 +53,25 @@ def plot_stocks(stocks, time_period):
 def plot_candle(stocks,start_date):
     
     ticker = yf.Ticker(stocks)
-    dfy = ticker.history(period = '1mo')
+    df = ticker.history(start=start_date)
     #print(df)
-    high_data = dfy[['High']]
-    open_data = dfy[['Open']]
-    low_data = dfy[['Low']]
-    close_data = dfy[['Close']]
-    #dates = df[['Date']]
-    df = df = web.DataReader(stocks, data_source='yahoo', start=start_date)
-    trace1 = trace1 = {
-    'x': df.index,
-    'open': df.Open,
-    'close': df.Close,
-    'high': df.High,
-    'low': df.Low,
-    'type': 'candlestick',
-    'name': 'AAPL',
-    'showlegend': True
-}
-
-    fig = go.Figure(data=[trace1])
-
+    dates = df.index
+    openData = df.loc[:,'Open']
+    closeData = df.loc[:,'Close']
+    lowData = df.loc[:,'Low']
+    highData = df.loc[:,'High']
+    dates = df.index
+    print(openData)
+    fig = go.Figure(data=[go.Candlestick(x=dates,
+                       open=openData, high=highData,
+                       low=lowData, close=closeData)])
     fig.show()
     
 if __name__ == "__main__":
-    #plot_open_close("AAPL", "5d")
+    plot_open_close("AAPL", "5d")
 
-    #plot_high("AAPL", "5d")
+    plot_high("AAPL", "5d")
 
-    #stocks = ["AAPL", "GOOGL", "AMZN", "TSLA"]
-    #plot_stocks(stocks, "1mo")
-    plot_candle("AAPL",'01-01-2019') #having issues extracting the dates
+    stocks = ["AAPL", "GOOGL", "AMZN", "TSLA"]
+    plot_stocks(stocks, "1mo")
+    plot_candle("AAPL",'2020-01-01') #having issues extracting the dates
