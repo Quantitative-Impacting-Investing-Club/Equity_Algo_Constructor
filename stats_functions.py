@@ -126,6 +126,34 @@ def plot_rsi(ticker_name, interval, current_date):
     plt.show()
 
 
+def calculate_ma(ticker_name, interval, date):
+    ticker = yf.Ticker(ticker_name)
+    
+    delta = datetime.timedelta(days=interval+50)
+    df = ticker.history(start=date-delta, end=date)
+    df = df[['Close']]
+    df.reset_index(level=0, inplace=True)
+    df.columns=['ds','y']
+
+    df['SMA_20'] = df.y.rolling(window=20).mean()
+    df['SMA_50'] = df.y.rolling(window=50).mean()
+    df.drop(index=list(range(50)), inplace=True)
+
+    plt.plot(df.ds, df.y, label=ticker_name)
+    plt.plot(df.ds, df.SMA_20, label=ticker_name+' 20 Day SMA', color='orange')
+    plt.plot(df.ds, df.SMA_50, label=ticker_name+' 50 Day SMA', color='magenta')
+
+    df['EMA_12'] = df.y.ewm(span=12,adjust=False).mean()
+    df['EMA_26'] = df.y.ewm(span=26,adjust=False).mean()
+    df['MACD'] = df.EMA_12 - df.EMA_26
+    df['EMA_9'] = df.MACD.ewm(span=9,adjust=False).mean()
+
+    plt.plot(df.ds, df.MACD, label=ticker_name+' MACD', color = '#EBD2BE')
+    plt.plot(df.ds, df.EMA_9, label='Signal Line', color='#E5A4CB')
+    plt.legend(loc='upper left')
+    plt.show()
+
+
 def candlestick_strategy(ticker_name, interval,current_date):
     #candle stick can do long intervals since yfinance provides open, close,highs and lows for a long range of dates
     date_list = [current_date - datetime.timedelta(days=x) for x in range(interval)]
@@ -241,4 +269,6 @@ if __name__ == "__main__":
     
     #plot_mfi("AAPL", 30, date)
     
-    candlestick_strategy('AAPL',25,date)
+    #candlestick_strategy('AAPL',25,date)
+
+    plot_macd("AAPL", 365, date)
