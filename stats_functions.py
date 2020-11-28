@@ -38,13 +38,8 @@ def calculate_mfi(ticker_name, date):
 
     mfi = 100 - (100 / (1 + money_ratio))
 
-    if mfi > 70:
-        return pd.DataFrame({'stock':ticker_name,'date':date,'action':"sell"})
-    if mfi < 30:
-        return pd.DataFrame({'stock':ticker_name,'date':date,'action':"buy"})
-    else:
-        return None
-
+    
+    return mfi
 
 def calculate_rsi(ticker_name, date):
     ticker = yf.Ticker(ticker_name)
@@ -81,13 +76,7 @@ def calculate_rsi(ticker_name, date):
     # calculates rsi
     rsi = 100 - (100 / (1 + average_gain / average_loss))
     
-    #modified output type to be uniform
-    if rsi > 70:
-        return pd.DataFrame({'stock':ticker_name,'date':date,'action':"sell"})
-    if rsi < 30:
-        return pd.DataFrame({'stock':ticker_name,'date':date,'action':"buy"})
-    else:
-        return None
+    return rsi
 
 
 # plots MFI of a stock over given interval
@@ -134,6 +123,34 @@ def plot_rsi(ticker_name, interval, current_date):
     plt.xlabel('Date')
     plt.ylabel('Relative Strength Index')
     plt.title(str("Relative Strength Index of " + ticker_name + " over " + str(interval) + " days"))
+    plt.show()
+
+
+def calculate_ma(ticker_name, interval, date):
+    ticker = yf.Ticker(ticker_name)
+    
+    delta = datetime.timedelta(days=interval+50)
+    df = ticker.history(start=date-delta, end=date)
+    df = df[['Close']]
+    df.reset_index(level=0, inplace=True)
+    df.columns=['ds','y']
+
+    df['SMA_20'] = df.y.rolling(window=20).mean()
+    df['SMA_50'] = df.y.rolling(window=50).mean()
+    df.drop(index=list(range(50)), inplace=True)
+
+    plt.plot(df.ds, df.y, label=ticker_name)
+    plt.plot(df.ds, df.SMA_20, label=ticker_name+' 20 Day SMA', color='orange')
+    plt.plot(df.ds, df.SMA_50, label=ticker_name+' 50 Day SMA', color='magenta')
+
+    df['EMA_12'] = df.y.ewm(span=12,adjust=False).mean()
+    df['EMA_26'] = df.y.ewm(span=26,adjust=False).mean()
+    df['MACD'] = df.EMA_12 - df.EMA_26
+    df['EMA_9'] = df.MACD.ewm(span=9,adjust=False).mean()
+
+    plt.plot(df.ds, df.MACD, label=ticker_name+' MACD', color = '#EBD2BE')
+    plt.plot(df.ds, df.EMA_9, label='Signal Line', color='#E5A4CB')
+    plt.legend(loc='upper left')
     plt.show()
 
 
@@ -252,5 +269,6 @@ if __name__ == "__main__":
     
     #plot_mfi("AAPL", 30, date)
     
-    transactions = candlestick_strategy('AAPL',25,date)
-    print(transactions)
+    #candlestick_strategy('AAPL',25,date)
+
+    plot_macd("AAPL", 365, date)
