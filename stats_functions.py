@@ -38,8 +38,12 @@ def calculate_mfi(ticker_name, date):
 
     mfi = 100 - (100 / (1 + money_ratio))
 
-    
-    return mfi
+    if mfi > 70:
+        return pd.DataFrame({'stock':ticker_name,'date':date,'action':"sell"})
+    if mfi < 30:
+        return pd.DataFrame({'stock':ticker_name,'date':date,'action':"buy"})
+    else:
+        return None
 
 def calculate_rsi(ticker_name, date):
     ticker = yf.Ticker(ticker_name)
@@ -76,7 +80,12 @@ def calculate_rsi(ticker_name, date):
     # calculates rsi
     rsi = 100 - (100 / (1 + average_gain / average_loss))
     
-    return rsi
+    if rsi > 70:
+        return pd.DataFrame({'stock':ticker_name,'date':date,'action':"sell"})
+    if rsi < 30:
+        return pd.DataFrame({'stock':ticker_name,'date':date,'action':"buy"})
+    else:
+        return None
 
 
 # plots MFI of a stock over given interval
